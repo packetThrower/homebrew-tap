@@ -1,0 +1,64 @@
+name: Bump cask on new release
+
+# Polls packetThrower/PortFinder every 6 hours and, if a tag newer than
+# the cask's current `version` has been published, downloads the
+# corresponding universal DMG, computes its SHA256, rewrites the cask
+# in place, and pushes the bump commit straight to main. Manual runs
+# are supported via workflow_dispatch.
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bump-cask
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve latest PortFinder release version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo packetThrower/PortFinder --json tagName -q .tagName)
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Read current cask version
+        id: cask
+        run: |
+          v=$(grep -E '^\s*version "' Casks/portfinder.rb | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Bump cask
+        if: steps.release.outputs.version != steps.cask.outputs.version
+        run: |
+          set -euo pipefail
+          new="${{ steps.release.outputs.version }}"
+          old="${{ steps.cask.outputs.version }}"
+          dmg="https://github.com/packetThrower/PortFinder/releases/download/v${new}/PortFinder_${new}_universal.dmg"
+
+          echo "Bumping ${old} -> ${new}"
+          curl -fsSL -o /tmp/portfinder.dmg "$dmg"
+          [ -s /tmp/portfinder.dmg ] || { echo "DMG empty"; exit 1; }
+          sha=$(shasum -a 256 /tmp/portfinder.dmg | awk '{print $1}')
+
+          # Rewrite the two version-bearing lines in place. The cask's
+          # 2-space indentation and quoting style is preserved by the
+          # capture group; the rest of the file is left untouched.
+          sed -i -E "s/^(\s*version )\"[^\"]+\"/\1\"${new}\"/" Casks/portfinder.rb
+          sed -i -E "s/^(\s*sha256 )\"[a-f0-9]+\"/\1\"${sha}\"/" Casks/portfinder.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/portfinder.rb
+          git commit -m "Bump portfinder ${old} -> ${new}"
+          git push
