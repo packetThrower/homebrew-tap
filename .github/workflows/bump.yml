@@ -1,10 +1,18 @@
 name: Bump cask on new release
 
-# Polls packetThrower/PortFinder every 6 hours and, if a tag newer than
-# the cask's current `version` has been published, downloads the
-# corresponding universal DMG, computes its SHA256, rewrites the cask
-# in place, and pushes the bump commit straight to main. Manual runs
-# are supported via workflow_dispatch.
+# Polls packetThrower/PortFinder every 6 hours for stable AND
+# pre-release tags, bumping the matching cask when either is out of
+# date. Two casks live in this tap:
+#
+#   Casks/portfinder.rb        — tracks the latest stable release
+#                                 (`gh release view --latest`, which
+#                                 excludes pre-releases by default).
+#   Casks/portfinder@alpha.rb  — tracks the highest pre-release tag
+#                                 (everything with a `-alpha.N` /
+#                                 `-beta.N` / `-rc.N` suffix).
+#
+# Both bumps run in the same job; either or both may produce a commit.
+# Manual runs supported via workflow_dispatch.
 
 on:
   schedule:
@@ -21,44 +29,76 @@ concurrency:
 jobs:
   bump:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: packetThrower/PortFinder
     steps:
       - uses: actions/checkout@v4
 
-      - name: Resolve latest PortFinder release version
-        id: release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          tag=$(gh release view --repo packetThrower/PortFinder --json tagName -q .tagName)
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Read current cask version
-        id: cask
-        run: |
-          v=$(grep -E '^\s*version "' Casks/portfinder.rb | sed -E 's/.*"([^"]+)".*/\1/')
-          echo "version=$v" >> "$GITHUB_OUTPUT"
-
-      - name: Bump cask
-        if: steps.release.outputs.version != steps.cask.outputs.version
+      - name: Bump casks
         run: |
           set -euo pipefail
-          new="${{ steps.release.outputs.version }}"
-          old="${{ steps.cask.outputs.version }}"
-          dmg="https://github.com/packetThrower/PortFinder/releases/download/v${new}/PortFinder_${new}_universal.dmg"
 
-          echo "Bumping ${old} -> ${new}"
-          curl -fsSL -o /tmp/portfinder.dmg "$dmg"
-          [ -s /tmp/portfinder.dmg ] || { echo "DMG empty"; exit 1; }
-          sha=$(shasum -a 256 /tmp/portfinder.dmg | awk '{print $1}')
+          # bump_cask <cask-path> <new-version>
+          #
+          # Reads the current `version` line from <cask-path>, compares
+          # to <new-version>, and if they differ downloads the matching
+          # universal DMG, recomputes its SHA256, and rewrites the
+          # version + sha256 lines in place. Sed regexes are anchored
+          # to the indented stanza lines so the rest of the cask is
+          # left untouched.
+          bump_cask() {
+            local file=$1
+            local new=$2
 
-          # Rewrite the two version-bearing lines in place. The cask's
-          # 2-space indentation and quoting style is preserved by the
-          # capture group; the rest of the file is left untouched.
-          sed -i -E "s/^(\s*version )\"[^\"]+\"/\1\"${new}\"/" Casks/portfinder.rb
-          sed -i -E "s/^(\s*sha256 )\"[a-f0-9]+\"/\1\"${sha}\"/" Casks/portfinder.rb
+            if [ -z "$new" ]; then
+              echo "${file}: no upstream version, skipping"
+              return 0
+            fi
 
+            local current
+            current=$(grep -E '^\s*version "' "$file" | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ "$new" = "$current" ]; then
+              echo "${file}: ${current} (no change)"
+              return 0
+            fi
+
+            local dmg="https://github.com/${REPO}/releases/download/v${new}/PortFinder_${new}_universal.dmg"
+            echo "${file}: ${current} -> ${new} (downloading $dmg)"
+            curl -fsSL -o /tmp/portfinder.dmg "$dmg"
+            [ -s /tmp/portfinder.dmg ] || { echo "DMG empty"; exit 1; }
+            local sha
+            sha=$(shasum -a 256 /tmp/portfinder.dmg | awk '{print $1}')
+            rm -f /tmp/portfinder.dmg
+
+            sed -i -E "s/^(\s*version )\"[^\"]+\"/\1\"${new}\"/" "$file"
+            sed -i -E "s/^(\s*sha256 )\"[a-f0-9]+\"/\1\"${sha}\"/" "$file"
+          }
+
+          # Stable: `gh release view` returns the most recent
+          # non-prerelease release.
+          stable=$(gh release view --repo "$REPO" --json tagName -q .tagName)
+          bump_cask "Casks/portfinder.rb" "${stable#v}"
+
+          # Pre-release: list the latest 20 releases, filter to those
+          # with isPrerelease=true, take the first one. Empty string
+          # if the project has no pre-releases right now.
+          prerelease=$(
+            gh release list --repo "$REPO" --limit 20 \
+              --json tagName,isPrerelease \
+              -q '[.[] | select(.isPrerelease)] | .[0].tagName // ""'
+          )
+          bump_cask "Casks/portfinder@alpha.rb" "${prerelease#v}"
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain Casks)" ]; then
+            echo "No cask changes."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Casks/portfinder.rb
-          git commit -m "Bump portfinder ${old} -> ${new}"
+          git add Casks
+          git commit -m "Bump casks via auto-bump workflow"
           git push
