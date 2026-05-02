@@ -1,36 +1,47 @@
-# homebrew-portfinder
+# homebrew-tap
 
-Homebrew tap for [PortFinder](https://github.com/packetThrower/PortFinder) —
-a network switch port discovery tool that captures CDP, LLDP, and MNDP
-packets to identify what switch, port, and VLAN your device is plugged
-into.
+Homebrew tap for [packetThrower](https://github.com/packetThrower)
+projects:
 
-The tap ships two channels:
+| Cask | Project | Tracks | Installs as |
+|---|---|---|---|
+| `portfinder` | [PortFinder](https://github.com/packetThrower/PortFinder) | latest stable release | `/Applications/PortFinder.app`, CLI as `portfinder` |
+| `portfinder@alpha` | PortFinder | latest pre-release (alpha / beta / rc) | `/Applications/PortFinder Alpha.app`, CLI as `portfinder-alpha` |
+| `baudrun` | [Baudrun](https://github.com/packetThrower/Baudrun) | latest stable release | `/Applications/Baudrun.app` |
+| `baudrun@alpha` | Baudrun | latest pre-release (alpha / beta / rc) | `/Applications/Baudrun Alpha.app` |
 
-| Cask | Tracks | Installs as |
-|---|---|---|
-| `portfinder` | latest stable release | `/Applications/PortFinder.app`, CLI as `portfinder` |
-| `portfinder@alpha` | latest pre-release (alpha / beta / rc) | `/Applications/PortFinder Alpha.app`, CLI as `portfinder-alpha` |
+Stable and alpha for either project coexist — install one, both, or
+neither. State is shared between channels (preferences, app support
+files) because each project's stable + alpha ship under the same
+bundle identifier.
 
-The two coexist. Install one, both, or neither.
+## Migration from `homebrew-portfinder`
 
-## Stable
-
-```sh
-brew tap packetThrower/portfinder
-brew install --cask portfinder
-```
-
-Or in one step:
+This tap was renamed from `homebrew-portfinder` to `homebrew-tap`
+when Baudrun was added. GitHub auto-redirects the old name for a
+while but you'll want to re-tap to pick up the canonical URL:
 
 ```sh
-brew install --cask packetThrower/portfinder/portfinder
+brew untap packetThrower/portfinder
+brew tap packetThrower/tap
 ```
 
-This installs `PortFinder.app` to `/Applications` and symlinks the
-headless CLI to `$(brew --prefix)/bin/portfinder`. The same binary
-runs as the GUI when launched without args and as the CLI when given
-any subcommand:
+Already-installed casks keep working through the redirect; the
+re-tap just points future updates at the right place.
+
+## PortFinder
+
+Network switch port discovery — captures CDP, LLDP, and MNDP packets
+to identify what switch, port, and VLAN your device is plugged into.
+
+```sh
+brew install --cask packetThrower/tap/portfinder
+# or pre-release channel:
+brew install --cask packetThrower/tap/portfinder@alpha
+```
+
+The same binary runs as the GUI when launched without args and as
+the CLI when given a subcommand:
 
 ```sh
 portfinder capture --interface en0 --protocol LLDP
@@ -39,73 +50,78 @@ portfinder privileges
 portfinder --help
 ```
 
-## Alpha (pre-release channel)
+The alpha cask exposes the CLI as `portfinder-alpha` so it doesn't
+collide with stable.
 
-```sh
-brew install --cask packetThrower/portfinder/portfinder@alpha
-```
-
-Installs `PortFinder Alpha.app` to `/Applications` (alongside the
-stable `PortFinder.app` if you have it) and exposes the CLI as
-`portfinder-alpha`:
-
-```sh
-portfinder-alpha capture --interface en0 --protocol LLDP
-portfinder-alpha --version
-```
-
-State is shared between channels (preferences, saved window
-position, app support files) because both ship with the same bundle
-identifier `com.packetthrower.portfinder`. If you want isolated
-state per channel, run only one at a time. Pre-releases are tested
-but not GA — file regressions at
-[packetThrower/PortFinder/issues](https://github.com/packetThrower/PortFinder/issues).
-
-## Packet capture privileges
+### Packet capture privileges
 
 macOS gates `/dev/bpf*` behind root, so capture under a normal user
 account requires the BPF helper. After installing, open PortFinder
-(or PortFinder Alpha) and click **Install BPF Access** once. That
-adds your user to the `access_bpf` group via a LaunchDaemon and
-survives reboots / macOS upgrades. Until then, capture works only
-via `sudo portfinder capture …` (or `sudo portfinder-alpha …`).
+and click **Install BPF Access** once — that adds your user to the
+`access_bpf` group via a LaunchDaemon and survives reboots / macOS
+upgrades. Until then, capture works only via `sudo portfinder
+capture …`.
 
-## Update
+The BPF helper isn't touched by `brew uninstall`; remove it manually
+with `sudo /Library/Application Support/Wireshark/uninstall_chmodbpf.sh`
+if you need to.
+
+## Baudrun
+
+Cross-platform serial terminal for network devices — switches,
+routers, console servers. Auto-detects USB-serial adapter chipsets
+(CP210x, FTDI, CH340, PL2303), syntax-highlights vendor configs
+(Cisco IOS / IOS XR, Juniper Junos, Aruba AOS-CX, Arista EOS,
+MikroTik RouterOS), runs XMODEM/YMODEM file transfer.
+
+```sh
+brew install --cask packetThrower/tap/baudrun
+# or pre-release channel:
+brew install --cask packetThrower/tap/baudrun@alpha
+```
+
+GUI-only — no CLI. Stable and alpha install side-by-side as
+`/Applications/Baudrun.app` and `/Applications/Baudrun Alpha.app`
+respectively.
+
+## Updates
 
 ```sh
 brew update
 brew upgrade --cask portfinder
-brew upgrade --cask portfinder@alpha    # if installed
+brew upgrade --cask portfinder@alpha   # if installed
+brew upgrade --cask baudrun
+brew upgrade --cask baudrun@alpha      # if installed
 ```
 
-The tap's auto-bump workflow polls the upstream repo every 6 hours
+The tap's auto-bump workflow polls the upstream repos every 6 hours
 and pushes a fresh manifest whenever a new tag (stable or
-pre-release) lands.
+pre-release) lands. Manual run: Actions → "Bump casks on new
+release" → Run workflow.
 
 ## Uninstall
 
 ```sh
-brew uninstall --cask portfinder
-brew uninstall --cask portfinder@alpha   # if installed
-brew untap packetThrower/portfinder      # optional
+brew uninstall --cask portfinder portfinder@alpha
+brew uninstall --cask baudrun baudrun@alpha
+brew untap packetThrower/tap   # optional
 ```
 
-`brew uninstall --zap --cask portfinder` clears the shared state
-paths (`~/Library/Application Support/PortFinder`, the WebKit cache,
-the saved app state). The alpha cask intentionally does NOT zap
-those paths since they're shared with stable. The BPF helper
-LaunchDaemon, if installed, isn't touched by either uninstall;
-remove it manually with
-`sudo /Library/Application Support/Wireshark/uninstall_chmodbpf.sh`.
+`brew uninstall --zap …` on a stable cask clears the shared support
+paths (`~/Library/Application Support/<App>`, WebKit cache, saved
+app state). The alpha casks intentionally also list those paths in
+their zap stanza, but only as a fallback for when the stable cask
+isn't present — installing both and uninstalling alpha keeps state.
 
 ## Reporting issues
 
 Cask bugs (install fails, wrong version, broken livecheck): file in
-this repo. App bugs: file at
-[packetThrower/PortFinder](https://github.com/packetThrower/PortFinder/issues).
+this repo. App bugs: file at the project's own repo
+([PortFinder](https://github.com/packetThrower/PortFinder/issues),
+[Baudrun](https://github.com/packetThrower/Baudrun/issues)).
 
 ## License
 
-The cask files are released into the public domain via [The Unlicense](LICENSE).
-PortFinder itself is licensed separately — see the
-[main repo](https://github.com/packetThrower/PortFinder).
+The cask files are released into the public domain via [The
+Unlicense](LICENSE). The apps themselves are licensed separately —
+see each project repo.

@@ -1,18 +1,23 @@
-name: Bump cask on new release
+name: Bump casks on new release
 
-# Polls packetThrower/PortFinder every 6 hours for stable AND
-# pre-release tags, bumping the matching cask when either is out of
-# date. Two casks live in this tap:
+# Polls every tracked project's GitHub Releases every 6 hours,
+# bumping matching casks (stable + pre-release) when their pinned
+# version is out of date. Manual runs supported via
+# workflow_dispatch.
 #
-#   Casks/portfinder.rb        — tracks the latest stable release
-#                                 (`gh release view --latest`, which
-#                                 excludes pre-releases by default).
-#   Casks/portfinder@alpha.rb  — tracks the highest pre-release tag
-#                                 (everything with a `-alpha.N` /
-#                                 `-beta.N` / `-rc.N` suffix).
+# Currently tracking:
 #
-# Both bumps run in the same job; either or both may produce a commit.
-# Manual runs supported via workflow_dispatch.
+#   PortFinder  -> Casks/portfinder.rb        (stable, universal DMG)
+#                  Casks/portfinder@alpha.rb  (pre-release, universal DMG)
+#   Baudrun     -> Casks/baudrun.rb           (stable, per-arch DMG)
+#                  Casks/baudrun@alpha.rb     (pre-release, per-arch DMG)
+#
+# Adding a new project is two lines per channel: pick `bump_universal`
+# (single sha256 stanza) or `bump_per_arch` (`sha256 arm: ..., intel:
+# ...`), and a URL template using `{VERSION}` and (for per-arch)
+# `{ARCH}`. The {ARCH} placeholder is filled with `aarch64` and `x64`
+# in turn — the same `arch arm: "aarch64", intel: "x64"` mapping
+# Tauri's bundle naming uses.
 
 on:
   schedule:
@@ -31,7 +36,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-      REPO: packetThrower/PortFinder
     steps:
       - uses: actions/checkout@v4
 
@@ -39,23 +43,51 @@ jobs:
         run: |
           set -euo pipefail
 
-          # bump_cask <cask-path> <new-version>
+          # bump_universal <cask-path> <new-version> <url-template>
           #
-          # Reads the current `version` line from <cask-path>, compares
-          # to <new-version>, and if they differ downloads the matching
-          # universal DMG, recomputes its SHA256, and rewrites the
-          # version + sha256 lines in place. Sed regexes are anchored
-          # to the indented stanza lines so the rest of the cask is
-          # left untouched.
-          bump_cask() {
-            local file=$1
-            local new=$2
-
+          # url-template uses {VERSION} placeholder. Downloads the
+          # single artifact, recomputes SHA256, and rewrites the
+          # `version` line and the single `sha256 "..."` line in
+          # place. Sed regexes are anchored to the indented stanza
+          # lines so the rest of the cask is left untouched.
+          bump_universal() {
+            local file=$1 new=$2 tpl=$3
             if [ -z "$new" ]; then
               echo "${file}: no upstream version, skipping"
               return 0
             fi
+            local current
+            current=$(grep -E '^\s*version "' "$file" | sed -E 's/.*"([^"]+)".*/\1/')
+            if [ "$new" = "$current" ]; then
+              echo "${file}: ${current} (no change)"
+              return 0
+            fi
+            local url="${tpl//\{VERSION\}/$new}"
+            echo "${file}: ${current} -> ${new} (downloading $url)"
+            curl -fsSL -o /tmp/dl.bin "$url"
+            [ -s /tmp/dl.bin ] || { echo "${url} empty"; exit 1; }
+            local sha
+            sha=$(shasum -a 256 /tmp/dl.bin | awk '{print $1}')
+            rm -f /tmp/dl.bin
+            sed -i -E "s/^(\s*version )\"[^\"]+\"/\1\"${new}\"/" "$file"
+            sed -i -E "s/^(\s*sha256 )\"[a-f0-9]+\"/\1\"${sha}\"/" "$file"
+          }
 
+          # bump_per_arch <cask-path> <new-version> <url-template>
+          #
+          # url-template uses {VERSION} and {ARCH} placeholders.
+          # Downloads BOTH `aarch64` and `x64` artifacts, recomputes
+          # SHA256 for each, and rewrites the `version` line plus
+          # both `sha256 arm: "..."` and `intel: "..."` lines. The
+          # arm/intel split is anchored to the keyword name on each
+          # line so the multi-line `sha256` stanza can be edited
+          # without disturbing surrounding context.
+          bump_per_arch() {
+            local file=$1 new=$2 tpl=$3
+            if [ -z "$new" ]; then
+              echo "${file}: no upstream version, skipping"
+              return 0
+            fi
             local current
             current=$(grep -E '^\s*version "' "$file" | sed -E 's/.*"([^"]+)".*/\1/')
             if [ "$new" = "$current" ]; then
@@ -63,32 +95,60 @@ jobs:
               return 0
             fi
 
-            local dmg="https://github.com/${REPO}/releases/download/v${new}/PortFinder_${new}_universal.dmg"
-            echo "${file}: ${current} -> ${new} (downloading $dmg)"
-            curl -fsSL -o /tmp/portfinder.dmg "$dmg"
-            [ -s /tmp/portfinder.dmg ] || { echo "DMG empty"; exit 1; }
-            local sha
-            sha=$(shasum -a 256 /tmp/portfinder.dmg | awk '{print $1}')
-            rm -f /tmp/portfinder.dmg
+            local arm_url="${tpl//\{VERSION\}/$new}"
+            arm_url="${arm_url//\{ARCH\}/aarch64}"
+            local intel_url="${tpl//\{VERSION\}/$new}"
+            intel_url="${intel_url//\{ARCH\}/x64}"
+
+            echo "${file}: ${current} -> ${new}"
+            echo "  arm:   ${arm_url}"
+            curl -fsSL -o /tmp/arm.bin "$arm_url"
+            [ -s /tmp/arm.bin ] || { echo "arm artifact empty"; exit 1; }
+            local arm_sha
+            arm_sha=$(shasum -a 256 /tmp/arm.bin | awk '{print $1}')
+
+            echo "  intel: ${intel_url}"
+            curl -fsSL -o /tmp/intel.bin "$intel_url"
+            [ -s /tmp/intel.bin ] || { echo "intel artifact empty"; exit 1; }
+            local intel_sha
+            intel_sha=$(shasum -a 256 /tmp/intel.bin | awk '{print $1}')
+
+            rm -f /tmp/arm.bin /tmp/intel.bin
 
             sed -i -E "s/^(\s*version )\"[^\"]+\"/\1\"${new}\"/" "$file"
-            sed -i -E "s/^(\s*sha256 )\"[a-f0-9]+\"/\1\"${sha}\"/" "$file"
+            sed -i -E "s/^(\s*sha256\s+arm:\s+)\"[a-f0-9]+\"/\1\"${arm_sha}\"/" "$file"
+            sed -i -E "s/^(\s+intel:\s+)\"[a-f0-9]+\"/\1\"${intel_sha}\"/" "$file"
           }
 
-          # Stable: `gh release view` returns the most recent
-          # non-prerelease release.
-          stable=$(gh release view --repo "$REPO" --json tagName -q .tagName)
-          bump_cask "Casks/portfinder.rb" "${stable#v}"
+          # Stable for <repo>: most recent non-prerelease tag (`gh
+          # release view --latest` excludes pre-releases by default).
+          stable_for() {
+            gh release view --repo "$1" --json tagName -q .tagName 2>/dev/null || true
+          }
 
-          # Pre-release: list the latest 20 releases, filter to those
-          # with isPrerelease=true, take the first one. Empty string
-          # if the project has no pre-releases right now.
-          prerelease=$(
-            gh release list --repo "$REPO" --limit 20 \
+          # Pre-release for <repo>: highest pre-release tag, or empty
+          # string if the project has no pre-releases right now.
+          prerelease_for() {
+            gh release list --repo "$1" --limit 20 \
               --json tagName,isPrerelease \
               -q '[.[] | select(.isPrerelease)] | .[0].tagName // ""'
-          )
-          bump_cask "Casks/portfinder@alpha.rb" "${prerelease#v}"
+          }
+
+          # ----- PortFinder (universal DMG) -----
+          PF_REPO=packetThrower/PortFinder
+          PF_TPL="https://github.com/${PF_REPO}/releases/download/v{VERSION}/PortFinder_{VERSION}_universal.dmg"
+          PF_STABLE=$(stable_for "$PF_REPO")
+          PF_PRE=$(prerelease_for "$PF_REPO")
+          bump_universal "Casks/portfinder.rb"        "${PF_STABLE#v}" "$PF_TPL"
+          bump_universal "Casks/portfinder@alpha.rb"  "${PF_PRE#v}"    "$PF_TPL"
+
+          # ----- Baudrun (per-arch DMG) -----
+          BR_REPO=packetThrower/Baudrun
+          BR_TPL="https://github.com/${BR_REPO}/releases/download/v{VERSION}/Baudrun_{VERSION}_{ARCH}.dmg"
+          BR_STABLE=$(stable_for "$BR_REPO")
+          BR_PRE=$(prerelease_for "$BR_REPO")
+          bump_per_arch "Casks/baudrun.rb"        "${BR_STABLE#v}" "$BR_TPL"
+          bump_per_arch "Casks/baudrun@alpha.rb"  "${BR_PRE#v}"    "$BR_TPL"
 
       - name: Commit and push if changed
         run: |
