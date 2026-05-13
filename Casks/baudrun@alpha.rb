@@ -7,9 +7,9 @@ cask "baudrun@alpha" do
   # next stable ships from the gpui main.
   arch arm: "arm64", intel: "amd64"
 
-  version "0.9.6-beta.3"
-  sha256 arm:   "47a2ac0e222eb68cd529fa0d15f78b32def6a99ad765d4605197fdb7e9a3d4df",
-         intel: "70d9a860731f86a0c1e8e7bf749ba2ceb2b04e07fb72d1f55de854cde574fad0"
+  version "0.9.7-alpha.1"
+  sha256 arm:   "9647f804e58512203a2b366c20cb47cfa69ecf557fcb416705562185ff7c7a75",
+         intel: "3d804c210d8fbdc5fa931b49a3766c21159343c640b0b4584d3056e7474c9e6a"
 
   url "https://github.com/packetThrower/Baudrun/releases/download/v#{version}/Baudrun_#{version}_#{arch}.dmg"
   name "Baudrun Alpha"
