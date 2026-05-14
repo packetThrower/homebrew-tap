@@ -1,5 +1,11 @@
 cask "baudrun@alpha" do
-  arch arm: "aarch64", intel: "x64"
+  # arm64 / amd64 naming follows cargo-packager's output convention
+  # used by the gpui rewrite (v0.9.7-alpha.1+). The stable cask
+  # still uses aarch64/x64 because v0.9.5 was built with Tauri's
+  # bundle naming and that file already exists on the Releases page
+  # under those filenames; flip the stable cask in lockstep when the
+  # next stable ships from the gpui main.
+  arch arm: "arm64", intel: "amd64"
 
   version "0.9.6-beta.3"
   sha256 arm:   "47a2ac0e222eb68cd529fa0d15f78b32def6a99ad765d4605197fdb7e9a3d4df",

@@ -15,9 +15,11 @@ name: Bump casks on new release
 # Adding a new project is two lines per channel: pick `bump_universal`
 # (single sha256 stanza) or `bump_per_arch` (`sha256 arm: ..., intel:
 # ...`), and a URL template using `{VERSION}` and (for per-arch)
-# `{ARCH}`. The {ARCH} placeholder is filled with `aarch64` and `x64`
-# in turn — the same `arch arm: "aarch64", intel: "x64"` mapping
-# Tauri's bundle naming uses.
+# `{ARCH}`. `bump_per_arch` takes optional 4th + 5th args for the
+# arm + intel arch tokens; the defaults are `aarch64` and `x64`
+# (Tauri's bundle naming, kept for the historical Baudrun stable
+# cask). Newer cargo-packager-driven casks like baudrun@alpha pass
+# `arm64` + `amd64` explicitly.
 
 on:
   schedule:
@@ -74,16 +76,24 @@ jobs:
           }
 
           # bump_per_arch <cask-path> <new-version> <url-template>
+          #                [arm-arch-token] [intel-arch-token]
           #
           # url-template uses {VERSION} and {ARCH} placeholders.
-          # Downloads BOTH `aarch64` and `x64` artifacts, recomputes
-          # SHA256 for each, and rewrites the `version` line plus
-          # both `sha256 arm: "..."` and `intel: "..."` lines. The
+          # Downloads BOTH per-arch artifacts, recomputes SHA256 for
+          # each, and rewrites the `version` line plus both
+          # `sha256 arm: "..."` and `intel: "..."` lines. The
           # arm/intel split is anchored to the keyword name on each
           # line so the multi-line `sha256` stanza can be edited
           # without disturbing surrounding context.
+          #
+          # 4th + 5th args override the arch tokens; defaults are
+          # `aarch64` / `x64` (Tauri's bundle naming, preserved for
+          # the legacy Baudrun stable cask at v0.9.5). Newer
+          # cargo-packager casks (Baudrun alpha v0.9.7+) pass
+          # `arm64` / `amd64`.
           bump_per_arch() {
             local file=$1 new=$2 tpl=$3
+            local arm_arch=${4:-aarch64} intel_arch=${5:-x64}
             if [ -z "$new" ]; then
               echo "${file}: no upstream version, skipping"
               return 0
@@ -96,9 +106,9 @@ jobs:
             fi
 
             local arm_url="${tpl//\{VERSION\}/$new}"
-            arm_url="${arm_url//\{ARCH\}/aarch64}"
+            arm_url="${arm_url//\{ARCH\}/$arm_arch}"
             local intel_url="${tpl//\{VERSION\}/$new}"
-            intel_url="${intel_url//\{ARCH\}/x64}"
+            intel_url="${intel_url//\{ARCH\}/$intel_arch}"
 
             echo "${file}: ${current} -> ${new}"
             echo "  arm:   ${arm_url}"
@@ -143,12 +153,17 @@ jobs:
           bump_universal "Casks/portfinder@alpha.rb"  "${PF_PRE#v}"    "$PF_TPL"
 
           # ----- Baudrun (per-arch DMG) -----
+          # Stable cask still tracks Tauri-built v0.9.5 DMG filenames
+          # (aarch64 / x64 — bump_per_arch defaults). The alpha cask
+          # tracks cargo-packager filenames (arm64 / amd64) on the
+          # post-rewrite gpui main; pass tokens explicitly.
           BR_REPO=packetThrower/Baudrun
           BR_TPL="https://github.com/${BR_REPO}/releases/download/v{VERSION}/Baudrun_{VERSION}_{ARCH}.dmg"
           BR_STABLE=$(stable_for "$BR_REPO")
           BR_PRE=$(prerelease_for "$BR_REPO")
           bump_per_arch "Casks/baudrun.rb"        "${BR_STABLE#v}" "$BR_TPL"
-          bump_per_arch "Casks/baudrun@alpha.rb"  "${BR_PRE#v}"    "$BR_TPL"
+          bump_per_arch "Casks/baudrun@alpha.rb"  "${BR_PRE#v}"    "$BR_TPL" \
+            arm64 amd64
 
       - name: Commit and push if changed
         run: |
