@@ -17,9 +17,10 @@ name: Bump casks on new release
 # ...`), and a URL template using `{VERSION}` and (for per-arch)
 # `{ARCH}`. `bump_per_arch` takes optional 4th + 5th args for the
 # arm + intel arch tokens; the defaults are `aarch64` and `x64`
-# (Tauri's bundle naming, kept for the historical Baudrun stable
-# cask). Newer cargo-packager-driven casks like baudrun@alpha pass
-# `arm64` + `amd64` explicitly.
+# (historical Tauri bundle naming, kept available for back-compat
+# with older taps). Current casks use `arm64` + `amd64` to match
+# cargo-packager's filenames — pass them explicitly so future
+# readers don't have to dig.
 
 on:
   schedule:
@@ -87,10 +88,10 @@ jobs:
           # without disturbing surrounding context.
           #
           # 4th + 5th args override the arch tokens; defaults are
-          # `aarch64` / `x64` (Tauri's bundle naming, preserved for
-          # the legacy Baudrun stable cask at v0.9.5). Newer
-          # cargo-packager casks (Baudrun alpha v0.9.7+) pass
-          # `arm64` / `amd64`.
+          # `aarch64` / `x64` (historical Tauri bundle naming, kept
+          # available as defaults for back-compat). Current Baudrun
+          # casks pass `arm64` / `amd64` explicitly to match
+          # cargo-packager's filenames; see the Baudrun block below.
           bump_per_arch() {
             local file=$1 new=$2 tpl=$3
             local arm_arch=${4:-aarch64} intel_arch=${5:-x64}
@@ -153,15 +154,20 @@ jobs:
           bump_universal "Casks/portfinder@alpha.rb"  "${PF_PRE#v}"    "$PF_TPL"
 
           # ----- Baudrun (per-arch DMG) -----
-          # Stable cask still tracks Tauri-built v0.9.5 DMG filenames
-          # (aarch64 / x64 — bump_per_arch defaults). The alpha cask
-          # tracks cargo-packager filenames (arm64 / amd64) on the
-          # post-rewrite gpui main; pass tokens explicitly.
+          # Both stable and pre-release ship from cargo-packager now
+          # (stable since v0.9.7; the prior Tauri-era stable used
+          # aarch64 / x64 in filenames — bump_per_arch's historical
+          # defaults — but the v0.9.7 cutover moved stable onto the
+          # gpui build's arm64 / amd64 naming). Pass tokens explicitly
+          # on both lines for clarity, even though they're the same
+          # pair, so future readers don't have to remember which
+          # defaults applied to which cask.
           BR_REPO=packetThrower/Baudrun
           BR_TPL="https://github.com/${BR_REPO}/releases/download/v{VERSION}/Baudrun_{VERSION}_{ARCH}.dmg"
           BR_STABLE=$(stable_for "$BR_REPO")
           BR_PRE=$(prerelease_for "$BR_REPO")
-          bump_per_arch "Casks/baudrun.rb"        "${BR_STABLE#v}" "$BR_TPL"
+          bump_per_arch "Casks/baudrun.rb"        "${BR_STABLE#v}" "$BR_TPL" \
+            arm64 amd64
           bump_per_arch "Casks/baudrun@alpha.rb"  "${BR_PRE#v}"    "$BR_TPL" \
             arm64 amd64
 
