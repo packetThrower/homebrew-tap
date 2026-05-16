@@ -1,8 +1,15 @@
 cask "portfinder@alpha" do
-  version "3.3.0-alpha.2"
-  sha256 "76bfc20616514038057e97f1eb46fe3e68577e5cdf90431ea71e07a3378a70fa"
+  arch arm: "arm64", intel: "amd64"
 
-  url "https://github.com/packetThrower/PortFinder/releases/download/v#{version}/PortFinder_#{version}_universal.dmg"
+  version "4.0.0-alpha.1"
+  # PLACEHOLDER hashes — fill in real values from the v4.0.0-alpha.1
+  # release artifacts once they're built and published. Until then,
+  # `brew install --cask packetThrower/tap/portfinder@alpha` will
+  # fail the SHA256 check and refuse to install (intentional).
+  sha256 arm:   "0000000000000000000000000000000000000000000000000000000000000000",
+         intel: "0000000000000000000000000000000000000000000000000000000000000000"
+
+  url "https://github.com/packetThrower/PortFinder/releases/download/v#{version}/PortFinder_#{version}_#{arch}.dmg"
   name "PortFinder Alpha"
   desc "Network switch port discovery via CDP / LLDP / MNDP (pre-release channel)"
   homepage "https://github.com/packetThrower/PortFinder"
@@ -25,13 +32,17 @@ cask "portfinder@alpha" do
   app "PortFinder.app", target: "PortFinder Alpha.app"
   # CLI symlink uses a distinct name so it doesn't collide with the
   # stable cask's `portfinder` shim. Run alpha-channel captures with
-  # `portfinder-alpha capture …`.
-  binary "#{appdir}/PortFinder Alpha.app/Contents/MacOS/portfinder",
+  # `portfinder-alpha capture …`. Cargo's `[[bin]] name = "PortFinder"`
+  # (capitalised) is what cargo-packager writes into Contents/MacOS/,
+  # so the source path is `PortFinder` rather than the 3.x-era
+  # lowercase `portfinder`.
+  binary "#{appdir}/PortFinder Alpha.app/Contents/MacOS/PortFinder",
          target: "portfinder-alpha"
 
-  # Same Gatekeeper-quarantine strip as the stable cask. Tauri builds
-  # are ad-hoc signed but not notarized, so without this Tahoe (15+)
-  # may delete the binary on first launch.
+  # Same Gatekeeper-quarantine strip as the stable cask. cargo-packager
+  # ad-hoc signs the .app but doesn't notarize it (no paid Apple
+  # Developer account), so without this Tahoe (15+) may delete the
+  # binary on first launch.
   postflight do
     system_command "/usr/bin/xattr",
                    args: ["-dr", "com.apple.quarantine", "#{appdir}/PortFinder Alpha.app"],
@@ -39,11 +50,11 @@ cask "portfinder@alpha" do
   end
 
   # No `zap` block on purpose. The alpha and stable casks share the
-  # same bundle identifier (`com.packetthrower.portfinder`), so the
-  # Application Support / Preferences / WebKit cache paths are
-  # written to by whichever channel ran most recently. Zapping them
-  # from this cask would clobber the stable channel's state. If a
-  # user wants a clean uninstall, they can run
+  # same bundle identifier (`io.github.packetThrower.PortFinder`), so
+  # the Application Support / Preferences / Caches paths are written
+  # to by whichever channel ran most recently. Zapping them from this
+  # cask would clobber the stable channel's state. If a user wants a
+  # clean uninstall, they can run
   # `brew uninstall --zap --cask portfinder` (the stable variant)
   # which owns the shared paths.
 
@@ -55,7 +66,8 @@ cask "portfinder@alpha" do
     it doesn't collide with the stable `portfinder` symlink.
 
     Packet capture on macOS still needs the BPF helper. Open
-    PortFinder Alpha and click "Install BPF Access" once, or fall
-    back to `sudo portfinder-alpha capture …`.
+    PortFinder Alpha and click "Install BPF Helper" once, or fall
+    back to `sudo portfinder-alpha capture …`. macOS Background
+    Items will show the helper as "PortFinder BPF Helper".
   EOS
 end
