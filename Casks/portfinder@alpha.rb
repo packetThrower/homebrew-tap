@@ -1,13 +1,9 @@
 cask "portfinder@alpha" do
   arch arm: "arm64", intel: "amd64"
 
-  version "3.3.0-alpha.2"
-  # PLACEHOLDER hashes — fill in real values from the v4.0.0-alpha.1
-  # release artifacts once they're built and published. Until then,
-  # `brew install --cask packetThrower/tap/portfinder@alpha` will
-  # fail the SHA256 check and refuse to install (intentional).
-  sha256 arm:   "0000000000000000000000000000000000000000000000000000000000000000",
-         intel: "0000000000000000000000000000000000000000000000000000000000000000"
+  version "4.0.0-alpha.1"
+  sha256 arm:   "2e8ce302448a3f40844f0f0c394d02a7e19d78f1197d2b10f7bf41bbd62d4f7c",
+         intel: "3aa2f5ec1152b698852493f6bf523c96a67b7c09b0b1d5026311b0e7d0c85049"
 
   url "https://github.com/packetThrower/PortFinder/releases/download/v#{version}/PortFinder_#{version}_#{arch}.dmg"
   name "PortFinder Alpha"
