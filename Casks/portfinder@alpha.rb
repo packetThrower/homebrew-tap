@@ -1,7 +1,7 @@
 cask "portfinder@alpha" do
   arch arm: "arm64", intel: "amd64"
 
-  version "4.0.0-alpha.1"
+  version "3.3.0-alpha.2"
   # PLACEHOLDER hashes — fill in real values from the v4.0.0-alpha.1
   # release artifacts once they're built and published. Until then,
   # `brew install --cask packetThrower/tap/portfinder@alpha` will
