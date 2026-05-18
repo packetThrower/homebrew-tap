@@ -1,12 +1,18 @@
 cask "portfinder" do
-  version "3.2.0"
-  sha256 "f5874428d7519142348d800857ba0011c2e9d933fa750bad797594868f622785"
+  arch arm: "arm64", intel: "amd64"
 
-  url "https://github.com/packetThrower/PortFinder/releases/download/v#{version}/PortFinder_#{version}_universal.dmg"
+  version "4.0.0"
+  sha256 arm:   "e33ed87cf46cd76f2a55bd0f3ebfe89179b44c04b6c22f7bdc10a447252351cd",
+         intel: "85da514ab55da2e25ce2131d1f411529d54ec759fa616e10411fe8ff168ef239"
+
+  url "https://github.com/packetThrower/PortFinder/releases/download/v#{version}/PortFinder_#{version}_#{arch}.dmg"
   name "PortFinder"
   desc "Network switch port discovery via CDP / LLDP / MNDP"
   homepage "https://github.com/packetThrower/PortFinder"
 
+  # `:github_latest` excludes pre-release tags so the cask stays on
+  # stable 4.x.y / 5.x.y releases and never picks up the parallel
+  # `@alpha` channel even though both ship from the same repo.
   livecheck do
     url :url
     strategy :github_latest
@@ -15,10 +21,12 @@ cask "portfinder" do
   depends_on macos: ">= :big_sur"
 
   app "PortFinder.app"
-  # Expose the headless CLI on $PATH. The same binary runs as the GUI when
-  # launched without args and as a CLI (`portfinder capture`, `portfinder list`,
-  # `portfinder privileges`) when given any subcommand.
-  binary "#{appdir}/PortFinder.app/Contents/MacOS/portfinder"
+  # CLI shim. The 4.x bin name is capitalised (`PortFinder`, matching
+  # CFBundleExecutable + the macOS dock label); the 3.x cask had it
+  # lowercased because the Tauri build's binary was lowercase. Target
+  # stays `portfinder` so users keep typing the same command they
+  # always did.
+  binary "#{appdir}/PortFinder.app/Contents/MacOS/PortFinder", target: "portfinder"
 
   # PortFinder is currently shipped ad-hoc signed but not notarized, so
   # macOS Gatekeeper on Tahoe (15+) will quarantine and may delete the
@@ -31,8 +39,15 @@ cask "portfinder" do
                    sudo: false
   end
 
+  # 4.x identifier scheme is `io.github.packetThrower.PortFinder`,
+  # replacing the legacy 3.x `com.packetthrower.portfinder`. Both
+  # listed so `--zap` on an in-place 3.x → 4.x upgrade clears state
+  # from either generation of the app.
   zap trash: [
     "~/Library/Application Support/PortFinder",
+    "~/Library/Caches/io.github.packetThrower.PortFinder",
+    "~/Library/Preferences/io.github.packetThrower.PortFinder.plist",
+    "~/Library/Saved Application State/io.github.packetThrower.PortFinder.savedState",
     "~/Library/Caches/com.packetthrower.portfinder",
     "~/Library/Preferences/com.packetthrower.portfinder.plist",
     "~/Library/Saved Application State/com.packetthrower.portfinder.savedState",
@@ -42,13 +57,16 @@ cask "portfinder" do
   caveats <<~EOS
     Packet capture on macOS needs read access to /dev/bpf*. PortFinder
     can install a one-time helper that grants the `access_bpf` group to
-    your user — open the app and click "Install BPF Access" once after
+    your user — open the app and click "Install BPF Helper" once after
     install. Until then, capture works only under sudo:
 
       sudo portfinder capture --interface en0 --protocol LLDP
 
-    The helper survives reboots and macOS upgrades; uninstall it with
-    `sudo /Library/Application Support/Wireshark/uninstall_chmodbpf.sh`
-    if you ever need to.
+    The helper survives reboots and macOS upgrades. In macOS System
+    Settings → General → Login Items & Extensions the helper appears
+    as "PortFinder BPF Helper". Uninstall via the standalone
+    `PortFinder-BPF-<version>.pkg` from the release assets, or by
+    running `sudo /Library/Application\\ Support/PortFinder/uninstall-bpf.sh`
+    if you have a copy.
   EOS
 end
