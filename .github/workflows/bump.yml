@@ -7,8 +7,8 @@ name: Bump casks on new release
 #
 # Currently tracking:
 #
-#   PortFinder  -> Casks/portfinder.rb        (stable, universal DMG)
-#                  Casks/portfinder@alpha.rb  (pre-release, universal DMG)
+#   PortFinder  -> Casks/portfinder.rb        (stable, per-arch DMG)
+#                  Casks/portfinder@alpha.rb  (pre-release, per-arch DMG)
 #   Baudrun     -> Casks/baudrun.rb           (stable, per-arch DMG)
 #                  Casks/baudrun@alpha.rb     (pre-release, per-arch DMG)
 #
@@ -145,13 +145,25 @@ jobs:
               -q '[.[] | select(.isPrerelease)] | .[0].tagName // ""'
           }
 
-          # ----- PortFinder (universal DMG) -----
+          # ----- PortFinder (per-arch DMG) -----
+          # 4.x's release pipeline cross-compiles both Apple
+          # targets on the macos-26 CI runner and ships
+          # `PortFinder_<ver>_arm64.dmg` + `_amd64.dmg`
+          # separately. The pre-4.x stable was Tauri's
+          # universal DMG; this auto-bumper's old
+          # `bump_universal` line followed the universal URL
+          # template and broke when 4.0.1 dropped (404 on the
+          # non-existent universal asset). Both stable and
+          # @alpha casks have been per-arch since the 4.0.0
+          # cutover, so they share the per-arch path here.
           PF_REPO=packetThrower/PortFinder
-          PF_TPL="https://github.com/${PF_REPO}/releases/download/v{VERSION}/PortFinder_{VERSION}_universal.dmg"
+          PF_TPL="https://github.com/${PF_REPO}/releases/download/v{VERSION}/PortFinder_{VERSION}_{ARCH}.dmg"
           PF_STABLE=$(stable_for "$PF_REPO")
           PF_PRE=$(prerelease_for "$PF_REPO")
-          bump_universal "Casks/portfinder.rb"        "${PF_STABLE#v}" "$PF_TPL"
-          bump_universal "Casks/portfinder@alpha.rb"  "${PF_PRE#v}"    "$PF_TPL"
+          bump_per_arch "Casks/portfinder.rb"        "${PF_STABLE#v}" "$PF_TPL" \
+            arm64 amd64
+          bump_per_arch "Casks/portfinder@alpha.rb"  "${PF_PRE#v}"    "$PF_TPL" \
+            arm64 amd64
 
           # ----- Baudrun (per-arch DMG) -----
           # Both stable and pre-release ship from cargo-packager now
