@@ -1,9 +1,9 @@
 cask "portfinder" do
   arch arm: "arm64", intel: "amd64"
 
-  version "4.0.0"
-  sha256 arm:   "e33ed87cf46cd76f2a55bd0f3ebfe89179b44c04b6c22f7bdc10a447252351cd",
-         intel: "85da514ab55da2e25ce2131d1f411529d54ec759fa616e10411fe8ff168ef239"
+  version "4.0.1"
+  sha256 arm:   "671b1e40960cceb436e74655c2bed780594eb70c29fec1f5a4562913129cc7f8",
+         intel: "424e6c6bc6ce06a940743695ddb0727f52a4086523c7aff2b125b07f4111ede0"
 
   url "https://github.com/packetThrower/PortFinder/releases/download/v#{version}/PortFinder_#{version}_#{arch}.dmg"
   name "PortFinder"
