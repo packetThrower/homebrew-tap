@@ -1,9 +1,9 @@
 cask "baudrun" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.12.0"
-  sha256 arm:   "2aaec31b4953af64b51a0dbee8a5202ea4949ebf3c550ac4369e3eddf381fb38",
-         intel: "ae5e89418d0d1ac2f46df229fffebe0b4be9da858c8c767aeef009c8e28cf673"
+  version "0.12.1"
+  sha256 arm:   "24cb26ab3534159b5829ef7ba3af345788dd13286fd3468c8e13547ce621d58c",
+         intel: "dc74e239c3ec0f2350a39d4c2bc82f6f1a278b96041a123bedfaad3be980b9c4"
 
   url "https://github.com/packetThrower/Baudrun/releases/download/v#{version}/Baudrun_#{version}_#{arch}.dmg"
   name "Baudrun"
