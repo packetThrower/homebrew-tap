@@ -9,6 +9,7 @@ projects:
 | `portfinder@alpha` | PortFinder | latest pre-release (alpha / beta / rc) | `/Applications/PortFinder Alpha.app`, CLI as `portfinder-alpha` |
 | `baudrun` | [Baudrun](https://github.com/packetThrower/Baudrun) | latest stable release | `/Applications/Baudrun.app` |
 | `baudrun@alpha` | Baudrun | latest pre-release (alpha / beta / rc) | `/Applications/Baudrun Alpha.app` |
+| `etch341` | [etch341](https://github.com/packetThrower/etch341) | latest stable release | `/Applications/etch341.app`, CLI as `etch341` |
 
 Stable and alpha for either project coexist — install one, both, or
 neither. State is shared between channels (preferences, app support
@@ -84,6 +85,38 @@ GUI-only — no CLI. Stable and alpha install side-by-side as
 `/Applications/Baudrun.app` and `/Applications/Baudrun Alpha.app`
 respectively.
 
+## etch341
+
+Cross-platform CLI/GUI flash programmer for the CH341A USB SPI/I²C
+interface. Auto-detects SPI NOR chips via JEDEC ID or SFDP,
+reads / writes / verifies / erases, decodes status registers, ships
+a built-in chip database (W25Q, MX25L, MX25U, GD25Q, SST25VF,
+AT25SF, EON, PUYA, ISSI, 24Cxx I²C).
+
+```sh
+brew install --cask packetThrower/tap/etch341
+```
+
+Stable-only — no `@alpha` channel. The same binary runs as the GUI
+when launched without args and as the CLI when given a subcommand:
+
+```sh
+etch341 detect                       # JEDEC ID + chip lookup
+etch341 read -o bios.bin             # dump entire chip
+etch341 read -o - | sha256sum        # pipe-friendly stdout mode
+etch341 sfdp                         # decoded JESD216 table
+etch341 sr                           # SR1/SR2/SR3 decoded
+etch341 write -i bios.bin            # erase + write + verify
+```
+
+### Hardware setup
+
+The CH341A USB programmer doesn't need a driver on macOS — libusb
+is statically linked into the binary and macOS leaves the device's
+vendor interface alone. Plug it in, run `etch341 detect`, you're
+done. Use the bundled SOIC-8 clip or the on-board ZIF socket
+depending on whether the chip is in-circuit.
+
 ## Updates
 
 ```sh
@@ -92,6 +125,7 @@ brew upgrade --cask portfinder
 brew upgrade --cask portfinder@alpha   # if installed
 brew upgrade --cask baudrun
 brew upgrade --cask baudrun@alpha      # if installed
+brew upgrade --cask etch341
 ```
 
 The tap's auto-bump workflow polls the upstream repos every 6 hours
@@ -104,6 +138,7 @@ release" → Run workflow.
 ```sh
 brew uninstall --cask portfinder portfinder@alpha
 brew uninstall --cask baudrun baudrun@alpha
+brew uninstall --cask etch341
 brew untap packetThrower/tap   # optional
 ```
 
@@ -118,7 +153,8 @@ isn't present — installing both and uninstalling alpha keeps state.
 Cask bugs (install fails, wrong version, broken livecheck): file in
 this repo. App bugs: file at the project's own repo
 ([PortFinder](https://github.com/packetThrower/PortFinder/issues),
-[Baudrun](https://github.com/packetThrower/Baudrun/issues)).
+[Baudrun](https://github.com/packetThrower/Baudrun/issues),
+[etch341](https://github.com/packetThrower/etch341/issues)).
 
 ## License
 
