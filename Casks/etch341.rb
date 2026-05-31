@@ -1,9 +1,9 @@
 cask "etch341" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.4.1"
-  sha256 arm:   "f2e829ce73194b3bf8d7f13b02cb0b6675c673f4e248f79975a5bbd33c7563ab",
-         intel: "f902ec378e707ad7433b4b37d82ee578b443311c7d1c7688436fbb8fc26a3eaf"
+  version "0.5.0"
+  sha256 arm:   "9daeb8aa9d67b216091b3afbe2975923cbe3e8b3fac3a3c4a3a9ec1d64759304",
+         intel: "263b04e05414fd7c41afc8cb5e201176e3138dff26f57de0a7f9b11301af0be5"
 
   url "https://github.com/packetThrower/etch341/releases/download/v#{version}/etch341-#{version}-#{arch}-macos.dmg"
   name "etch341"
