@@ -12,6 +12,7 @@ name: Bump casks on new release
 #   Baudrun     -> Casks/baudrun.rb           (stable, per-arch DMG)
 #                  Casks/baudrun@alpha.rb     (pre-release, per-arch DMG)
 #   etch341     -> Casks/etch341.rb           (stable, per-arch DMG)
+#                  Casks/etch341@alpha.rb     (pre-release, per-arch DMG)
 #
 # Adding a new project is two lines per channel: pick `bump_universal`
 # (single sha256 stanza) or `bump_per_arch` (`sha256 arm: ..., intel:
@@ -185,16 +186,19 @@ jobs:
             arm64 amd64
 
           # ----- etch341 (per-arch DMG) -----
-          # Stable-only (no @alpha sibling) — etch341's release
-          # pipeline ships hyphen-delimited filenames with a
-          # trailing `-macos.dmg`, matching cargo-packager's CI
-          # rename convention. amd64 / arm64 arch tokens line up
-          # with the other casks here; the URL template just
-          # differs in punctuation + the platform suffix.
+          # etch341's release pipeline ships hyphen-delimited filenames
+          # with a trailing `-macos.dmg`, matching cargo-packager's CI
+          # rename convention. amd64 / arm64 arch tokens line up with
+          # the other casks here; the URL template just differs in
+          # punctuation + the platform suffix. Stable + @alpha share the
+          # one template — only the resolved version differs.
           ET_REPO=packetThrower/etch341
           ET_TPL="https://github.com/${ET_REPO}/releases/download/v{VERSION}/etch341-{VERSION}-{ARCH}-macos.dmg"
           ET_STABLE=$(stable_for "$ET_REPO")
-          bump_per_arch "Casks/etch341.rb" "${ET_STABLE#v}" "$ET_TPL" \
+          ET_PRE=$(prerelease_for "$ET_REPO")
+          bump_per_arch "Casks/etch341.rb"        "${ET_STABLE#v}" "$ET_TPL" \
+            arm64 amd64
+          bump_per_arch "Casks/etch341@alpha.rb"  "${ET_PRE#v}"    "$ET_TPL" \
             arm64 amd64
 
       - name: Commit and push if changed

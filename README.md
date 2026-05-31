@@ -10,6 +10,7 @@ projects:
 | `baudrun` | [Baudrun](https://github.com/packetThrower/Baudrun) | latest stable release | `/Applications/Baudrun.app` |
 | `baudrun@alpha` | Baudrun | latest pre-release (alpha / beta / rc) | `/Applications/Baudrun Alpha.app` |
 | `etch341` | [etch341](https://github.com/packetThrower/etch341) | latest stable release | `/Applications/etch341.app`, CLI as `etch341` |
+| `etch341@alpha` | etch341 | latest pre-release (alpha / beta / rc) | `/Applications/etch341 Alpha.app`, CLI as `etch341-alpha` |
 
 Stable and alpha for either project coexist — install one, both, or
 neither. State is shared between channels (preferences, app support
@@ -95,10 +96,12 @@ AT25SF, EON, PUYA, ISSI, 24Cxx I²C).
 
 ```sh
 brew install --cask packetThrower/tap/etch341
+# or pre-release channel:
+brew install --cask packetThrower/tap/etch341@alpha
 ```
 
-Stable-only — no `@alpha` channel. The same binary runs as the GUI
-when launched without args and as the CLI when given a subcommand:
+The same binary runs as the GUI when launched without args and as
+the CLI when given a subcommand:
 
 ```sh
 etch341 detect                       # JEDEC ID + chip lookup
@@ -108,6 +111,9 @@ etch341 sfdp                         # decoded JESD216 table
 etch341 sr                           # SR1/SR2/SR3 decoded
 etch341 write -i bios.bin            # erase + write + verify
 ```
+
+The alpha cask installs side-by-side as `/Applications/etch341 Alpha.app`
+and exposes the CLI as `etch341-alpha` so it doesn't collide with stable.
 
 ### Hardware setup
 
@@ -126,6 +132,7 @@ brew upgrade --cask portfinder@alpha   # if installed
 brew upgrade --cask baudrun
 brew upgrade --cask baudrun@alpha      # if installed
 brew upgrade --cask etch341
+brew upgrade --cask etch341@alpha      # if installed
 ```
 
 The tap's auto-bump workflow polls the upstream repos every 6 hours
@@ -138,7 +145,7 @@ release" → Run workflow.
 ```sh
 brew uninstall --cask portfinder portfinder@alpha
 brew uninstall --cask baudrun baudrun@alpha
-brew uninstall --cask etch341
+brew uninstall --cask etch341 etch341@alpha
 brew untap packetThrower/tap   # optional
 ```
 
