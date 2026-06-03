@@ -1,6 +1,8 @@
 class TokyoNightShell < Formula
   desc "Coordinated Tokyo Night theme for WezTerm, Starship, and Zellij"
   homepage "https://github.com/packetThrower/tokyo-night-shell"
+  url "https://github.com/packetThrower/tokyo-night-shell/archive/refs/tags/v0.1.0.tar.gz"
+  sha256 "464f63b4f2290b96c32f5a9cc7827f362d524f3467911f4bca1530de4d6ca1b8"
   license "MIT"
   head "https://github.com/packetThrower/tokyo-night-shell.git", branch: "main"
 
