@@ -1,9 +1,9 @@
 cask "zorite@alpha" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.1.0"
-  sha256 arm:   "c9d730c938eff8f2497033a6cd72fa85e9e75f90685b9eae0b5d1426fde1ac4a",
-         intel: "e7bebd489d8b40882806b3e43b760e30dbf1e33141a733a3e334b397d9efa719"
+  version "0.1.0-beta.4"
+  sha256 arm:   "f7be19a61f39024533bcd114ecd88547daf93994e54ea3bd427b37ea1d1e618a",
+         intel: "eb6e11c110f7b8653af44da5e82cdcf245372dc56b925f749f7c86c1eac354f7"
 
   url "https://github.com/packetThrower/zorite/releases/download/v#{version}/Zorite_#{version}_#{arch}.dmg"
   name "Zorite Alpha"
@@ -13,7 +13,7 @@ cask "zorite@alpha" do
   # Track the highest pre-release tag (anything with a `-suffix`). The default
   # :github_latest strategy excludes pre-releases, so go straight at the
   # releases atom and pick versions that carry a SemVer pre-release identifier.
-  # Currently parked on the v0.1.0 stable build until the next pre-release ships.
+  # Currently tracking v0.1.0-beta.4, the latest pre-release tag.
   livecheck do
     url "https://github.com/packetThrower/zorite/releases.atom"
     regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
