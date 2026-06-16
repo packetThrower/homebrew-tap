@@ -17,6 +17,23 @@ neither. State is shared between channels (preferences, app support
 files) because each project's stable + alpha ship under the same
 bundle identifier.
 
+## Trusting the tap (Homebrew 6.0.0+)
+
+As of [Homebrew 6.0.0](https://brew.sh/2026/06/11/homebrew-6.0.0/) (June 2026),
+third-party taps must be **trusted** before Homebrew evaluates their Ruby — a
+tap is a git repository of code that runs with your privileges, so this is a
+security gate. Tap and trust this tap once, then any `brew install --cask …`
+below works:
+
+```sh
+brew tap packetThrower/tap
+brew trust packetThrower/tap          # trust the whole tap
+```
+
+To trust just one cask instead of the whole tap, use e.g.
+`brew trust --cask packetThrower/tap/baudrun`. See Homebrew's
+[Tap Trust](https://docs.brew.sh/Tap-Trust) documentation for details.
+
 ## Migration from `homebrew-portfinder`
 
 This tap was renamed from `homebrew-portfinder` to `homebrew-tap`
