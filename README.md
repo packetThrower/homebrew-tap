@@ -11,9 +11,11 @@ projects:
 | `baudrun@alpha` | Baudrun | latest pre-release (alpha / beta / rc) | `/Applications/Baudrun Alpha.app` |
 | `etch341` | [etch341](https://github.com/packetThrower/etch341) | latest stable release | `/Applications/etch341.app`, CLI as `etch341` |
 | `etch341@alpha` | etch341 | latest pre-release (alpha / beta / rc) | `/Applications/etch341 Alpha.app`, CLI as `etch341-alpha` |
+| `zorite` | [Zorite](https://github.com/packetThrower/zorite) | latest stable release | `/Applications/Zorite.app` |
+| `zorite@alpha` | Zorite | latest pre-release (alpha / beta / rc) | `/Applications/Zorite Alpha.app` |
 
-Stable and alpha for either project coexist — install one, both, or
-neither. State is shared between channels (preferences, app support
+Stable and alpha for each project coexist — install one, several, or
+none. State is shared between channels (preferences, app support
 files) because each project's stable + alpha ship under the same
 bundle identifier.
 
@@ -140,6 +142,22 @@ vendor interface alone. Plug it in, run `etch341 detect`, you're
 done. Use the bundled SOIC-8 clip or the on-board ZIF socket
 depending on whether the chip is in-circuit.
 
+## Zorite
+
+Local-first, Logseq-style daily-journal and outliner note app — Markdown
+notes in a local SQLite database, with an infinite-scroll journal of daily
+pages plus linked `[[wiki-link]]` pages, whiteboards, PDF viewing, and
+full-text search.
+
+```sh
+brew install --cask packetThrower/tap/zorite
+# or pre-release channel:
+brew install --cask packetThrower/tap/zorite@alpha
+```
+
+GUI-only — no CLI. Stable and alpha install side-by-side as
+`/Applications/Zorite.app` and `/Applications/Zorite Alpha.app`.
+
 ## Updates
 
 ```sh
@@ -150,6 +168,8 @@ brew upgrade --cask baudrun
 brew upgrade --cask baudrun@alpha      # if installed
 brew upgrade --cask etch341
 brew upgrade --cask etch341@alpha      # if installed
+brew upgrade --cask zorite
+brew upgrade --cask zorite@alpha       # if installed
 ```
 
 The tap's auto-bump workflow polls the upstream repos every 6 hours
@@ -163,6 +183,7 @@ release" → Run workflow.
 brew uninstall --cask portfinder portfinder@alpha
 brew uninstall --cask baudrun baudrun@alpha
 brew uninstall --cask etch341 etch341@alpha
+brew uninstall --cask zorite zorite@alpha
 brew untap packetThrower/tap   # optional
 ```
 
@@ -178,7 +199,8 @@ Cask bugs (install fails, wrong version, broken livecheck): file in
 this repo. App bugs: file at the project's own repo
 ([PortFinder](https://github.com/packetThrower/PortFinder/issues),
 [Baudrun](https://github.com/packetThrower/Baudrun/issues),
-[etch341](https://github.com/packetThrower/etch341/issues)).
+[etch341](https://github.com/packetThrower/etch341/issues),
+[Zorite](https://github.com/packetThrower/zorite/issues)).
 
 ## License
 
