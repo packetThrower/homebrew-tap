@@ -20,7 +20,7 @@ cask "etch341" do
     strategy :github_latest
   end
 
-  depends_on macos: ">= :big_sur"
+  depends_on macos: :big_sur
 
   app "etch341.app"
   # Single binary that doubles as the CLI: typing `etch341` in a

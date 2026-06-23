@@ -1,9 +1,9 @@
 cask "zorite" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.1.2"
-  sha256 arm:   "2ee6f79349b69631f1b5b30377f478f34a6d77594af979ffe892d91b283cfb8f",
-         intel: "636cedaafa18537525f9141709f98722cccf4db88dd5aef84aba6e5128ab7faf"
+  version "0.2.0"
+  sha256 arm:   "0c873dd4d578ab2c3a632dfaea44e9b40fe265a240099ae32c414c0961e8f1b2",
+         intel: "1566f1f5b90079eef827da920f067baa40cf4368648e032f60356fd3f2077a07"
 
   url "https://github.com/packetThrower/zorite/releases/download/v#{version}/Zorite_#{version}_#{arch}.dmg"
   name "Zorite"
@@ -15,7 +15,7 @@ cask "zorite" do
     strategy :github_latest
   end
 
-  depends_on macos: ">= :big_sur"
+  depends_on macos: :big_sur
 
   app "Zorite.app"
 

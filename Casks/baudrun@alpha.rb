@@ -25,7 +25,7 @@ cask "baudrun@alpha" do
     regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
   end
 
-  depends_on macos: ">= :big_sur"
+  depends_on macos: :big_sur
 
   # Install alongside stable. The DMG always contains "Baudrun.app";
   # `target:` renames it on copy so /Applications can hold both
