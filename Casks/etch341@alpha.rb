@@ -14,9 +14,12 @@ cask "etch341@alpha" do
   # default :github_latest strategy excludes pre-releases, so go
   # straight at the releases atom and pick versions that include a
   # SemVer 2 pre-release identifier.
+  # Homebrew reads this URL as the repo's git tags; the pattern is anchored
+  # to the whole tag, with the major capped at three digits, so a stray
+  # date-style tag can't outrank a real pre-release.
   livecheck do
     url "https://github.com/packetThrower/etch341/releases.atom"
-    regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
+    regex(/^v?(\d{1,3}(?:\.\d+)+-[\w.]+)$/i)
   end
 
   depends_on :macos
