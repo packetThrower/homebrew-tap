@@ -18,7 +18,7 @@ cask "portfinder" do
     strategy :github_latest
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   app "PortFinder.app"
   # CLI shim. The 4.x bin name is capitalised (`PortFinder`, matching
@@ -33,10 +33,8 @@ cask "portfinder" do
   # binary on first run. Strip the quarantine attribute on install so the
   # app launches without the user having to right-click → Open or run
   # `xattr -cr` themselves. Remove this once we publish notarized builds.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/PortFinder.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/PortFinder.app"], must_succeed: false
   end
 
   # 4.x identifier scheme is `io.github.packetThrower.PortFinder`,
@@ -45,12 +43,12 @@ cask "portfinder" do
   # from either generation of the app.
   zap trash: [
     "~/Library/Application Support/PortFinder",
-    "~/Library/Caches/io.github.packetThrower.PortFinder",
-    "~/Library/Preferences/io.github.packetThrower.PortFinder.plist",
-    "~/Library/Saved Application State/io.github.packetThrower.PortFinder.savedState",
     "~/Library/Caches/com.packetthrower.portfinder",
+    "~/Library/Caches/io.github.packetThrower.PortFinder",
     "~/Library/Preferences/com.packetthrower.portfinder.plist",
+    "~/Library/Preferences/io.github.packetThrower.PortFinder.plist",
     "~/Library/Saved Application State/com.packetthrower.portfinder.savedState",
+    "~/Library/Saved Application State/io.github.packetThrower.PortFinder.savedState",
     "~/Library/WebKit/com.packetthrower.portfinder",
   ]
 

@@ -19,7 +19,7 @@ cask "zorite@alpha" do
     regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   # Install alongside stable. The DMG always contains "Zorite.app"; `target:`
   # renames it on copy so /Applications can hold both /Applications/Zorite.app
@@ -27,10 +27,8 @@ cask "zorite@alpha" do
   app "Zorite.app", target: "Zorite Alpha.app"
 
   # Same Gatekeeper quarantine workaround as the stable cask.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Zorite Alpha.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/Zorite Alpha.app"], must_succeed: false
   end
 
   # Stable and alpha share the same support directories — uninstalling one cask

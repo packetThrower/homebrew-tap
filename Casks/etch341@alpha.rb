@@ -7,7 +7,7 @@ cask "etch341@alpha" do
 
   url "https://github.com/packetThrower/etch341/releases/download/v#{version}/etch341-#{version}-#{arch}-macos.dmg"
   name "etch341 Alpha"
-  desc "Cross-platform CLI/GUI flash programmer for the CH341A USB SPI/I²C interface (pre-release channel)"
+  desc "Flash programmer for the CH341A USB SPI/I²C interface (pre-release channel)"
   homepage "https://github.com/packetThrower/etch341"
 
   # Track the highest pre-release tag (anything with a `-suffix`). The
@@ -19,14 +19,13 @@ cask "etch341@alpha" do
     regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   # Install alongside stable. The DMG always contains "etch341.app";
   # `target:` renames it on copy so /Applications can hold both
   # /Applications/etch341.app (stable) and
   # /Applications/etch341 Alpha.app (this cask) at the same time.
   app "etch341.app", target: "etch341 Alpha.app"
-
   # Single binary that doubles as the CLI (the GUI binary runs in CLI
   # mode when a subcommand is passed). `target:` renames the shim to
   # `etch341-alpha` so it coexists on $PATH with the stable cask's
@@ -39,10 +38,8 @@ cask "etch341@alpha" do
   # bundle and may delete it on first launch. Strip the quarantine
   # attribute on install so the app opens without the user having to
   # right-click → Open or run `xattr -cr` themselves.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/etch341 Alpha.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/etch341 Alpha.app"], must_succeed: false
   end
 
   # Stable and alpha share the same Application-Support / Caches /

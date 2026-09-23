@@ -19,7 +19,7 @@ cask "portfinder@alpha" do
     regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   # Install alongside stable. The DMG always contains "PortFinder.app";
   # `target:` renames it on copy so /Applications can hold both
@@ -39,10 +39,9 @@ cask "portfinder@alpha" do
   # ad-hoc signs the .app but doesn't notarize it (no paid Apple
   # Developer account), so without this Tahoe (15+) may delete the
   # binary on first launch.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/PortFinder Alpha.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args:         ["-dr", "com.apple.quarantine", "{{appdir}}/PortFinder Alpha.app"],
+                          must_succeed: false
   end
 
   # No `zap` block on purpose. The alpha and stable casks share the

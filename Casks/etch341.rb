@@ -20,7 +20,7 @@ cask "etch341" do
     strategy :github_latest
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   app "etch341.app"
   # Single binary that doubles as the CLI: typing `etch341` in a
@@ -35,10 +35,8 @@ cask "etch341" do
   # attribute on install so the app opens without the user having
   # to right-click → Open or run `xattr -cr` themselves. Remove
   # this once we publish notarized builds (TODO in the repo).
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/etch341.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/etch341.app"], must_succeed: false
   end
 
   # Standard Application-Support / Caches / Preferences paths

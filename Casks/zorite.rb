@@ -15,7 +15,7 @@ cask "zorite" do
     strategy :github_latest
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   app "Zorite.app"
 
@@ -24,10 +24,8 @@ cask "zorite" do
   # quarantine and may delete the binary on first run. Strip the quarantine
   # attribute on install so the app launches without a right-click → Open or a
   # manual `xattr -cr`. Remove this once notarized builds ship.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Zorite.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/Zorite.app"], must_succeed: false
   end
 
   zap trash: [

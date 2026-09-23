@@ -15,7 +15,7 @@ cask "baudrun" do
     strategy :github_latest
   end
 
-  depends_on macos: :big_sur
+  depends_on :macos
 
   app "Baudrun.app"
 
@@ -26,10 +26,8 @@ cask "baudrun" do
   # quarantine attribute on install so the app launches without
   # the user having to right-click → Open or run `xattr -cr` by
   # hand. Remove this once we publish notarized builds.
-  postflight do
-    system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Baudrun.app"],
-                   sudo: false
+  postflight_steps do
+    run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/Baudrun.app"], must_succeed: false
   end
 
   zap trash: [
