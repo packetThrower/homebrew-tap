@@ -13,10 +13,13 @@ cask "portfinder@alpha" do
   # Track the highest pre-release tag (anything with a `-suffix`). The
   # default :github_latest strategy excludes pre-releases, so we go
   # straight at the releases atom and pick versions that include a
-  # SemVer 2 pre-release identifier.
+  # SemVer 2 pre-release identifier. Homebrew reads this URL as the
+  # repo's git tags, and the old date-style tags (`v2026.4.26-1`) would
+  # win on version order, so the major is capped at three digits and the
+  # pattern anchored to the whole tag.
   livecheck do
     url "https://github.com/packetThrower/PortFinder/releases.atom"
-    regex(/v(\d+(?:\.\d+)+(?:-[\w.]+))/i)
+    regex(/^v?(\d{1,3}(?:\.\d+)+-[\w.]+)$/i)
   end
 
   depends_on :macos
