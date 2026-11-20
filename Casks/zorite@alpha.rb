@@ -1,9 +1,9 @@
 cask "zorite@alpha" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.12.2-beta.3"
-  sha256 arm:   "9e7cd6196bdc323b6f258c4550c2713aacb19b7505618bcfe2083212bd77c163",
-         intel: "580e1dfe556a6d868ab791a597d435a1c08f7fd5ecb453cbc92de17449e17192"
+  version "0.15.0-beta.1"
+  sha256 arm:   "dfd9e9da387f2017de204437269f8644e4f6143a79f53bd7afac4f122027515f",
+         intel: "821ee2c021b4778e0d6863c4b70bdfd267f5338c930ed491c6455092c76efeb4"
 
   url "https://github.com/packetThrower/zorite/releases/download/v#{version}/Zorite_#{version}_#{arch}.dmg"
   name "Zorite Alpha"
