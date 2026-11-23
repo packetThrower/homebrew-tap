@@ -1,9 +1,9 @@
 cask "zorite" do
   arch arm: "arm64", intel: "amd64"
 
-  version "0.14.0"
-  sha256 arm:   "ac911c719b4144ee23451c1959f7493dc87294772c0dfdbabb92100a7994f65e",
-         intel: "05e06a96544511e0768c1ff0ef88a3ba9f3e4b9d3eb125210a6b619a61a62012"
+  version "0.15.0"
+  sha256 arm:   "9946b8e03a990324d59dd33d47ade82d5bfe059be5e052168c8bc6654b0da631",
+         intel: "dc9a487e3cae688460878590586c1f016f423a25e7d981400eb485be7b2efa42"
 
   url "https://github.com/packetThrower/zorite/releases/download/v#{version}/Zorite_#{version}_#{arch}.dmg"
   name "Zorite"
